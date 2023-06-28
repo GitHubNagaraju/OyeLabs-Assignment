@@ -1,0 +1,24 @@
+POST http://localhost:3000/login
+
+{
+  "mobile":"9876543210",
+  "password":"12345"
+}
+####
+
+POST http://localhost:3000/add-customer
+
+{
+  "name":"nagaraju",
+  "email":"nagaraj1@email.com"
+}
+
+###
+
+POST http://localhost:3000/register
+
+{
+  "name":"admin",
+  "mobile":"8989898910",
+  "password":"admin"
+}

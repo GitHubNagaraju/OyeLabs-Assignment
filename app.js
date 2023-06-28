@@ -1,4 +1,3 @@
-// const { insertCustomers } = require("./3rd_promise.js");
 const express = require("express");
 const bcrypt = require("bcrypt");
 const app = express();
@@ -35,8 +34,7 @@ app.listen(3000, () => {
 });
 
 function isEmail(email) {
-  var emailFormat =
-    /^[a-zA-Z0-9_.+]+(?<!^[0-9]*)@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
+  var emailFormat = /^[a-zA-Z0-9_.+]+(?<!^[0-9]*)@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/;
   if (email !== "" && email.match(emailFormat)) {
     return true;
   }
@@ -140,27 +138,41 @@ app.post("/register", async (req, res) => {
   }
   const hashedPassword = await bcrypt.hash(password, 10);
   const selectUserQuery = `SELECT * FROM users WHERE mobile = '${mobile}'`;
-  const dbUser = await db.get(selectUserQuery);
-  if (dbUser === undefined) {
-    try {
-      const createUserQuery = `
-    INSERT INTO 
-      users ( name, password, mobile) 
-    VALUES 
-      (
-        '${name}',
-        '${hashedPassword}', 
-        '${mobile}'
-      )`;
-      const dbResponse = await db.run(createUserQuery);
-      const newUserId = dbResponse.lastID;
-      res.status(200).json({ message: `Created new user with ${newUserId}` });
-    } catch (error) {
-      res
+  db.get(selectUserQuery, (err, row) => {
+    if (err) {
+      return res
         .status(500)
-        .json({ message: "Internal Error! Please try again later" });
+        .json({ message: "Error while fetching user! please try again later" });
+    } else {
+      if (row === undefined) {
+        try {
+          const createUserQuery = `
+        INSERT INTO 
+        users ( name, password, mobile) 
+        VALUES 
+        (
+            '${name}',
+            '${hashedPassword}', 
+            '${mobile}'
+        )`;
+          db.run(createUserQuery, (err) => {
+            if (err) {
+              return res.status(500).json({
+                message: "Error while creating user! please try again later",
+              });
+            } else {
+              //   const newUserId = row.lastID;
+              res.status(200).json({ message: `Created new user` });
+            }
+          });
+        } catch (error) {
+          return res
+            .status(500)
+            .json({ message: "Internal Error! Please try again later" });
+        }
+      } else {
+        return res.status(400).json({ message: "User already exists" });
+      }
     }
-  } else {
-    res.status(400).json({ message: "User already exists" });
-  }
+  });
 });
